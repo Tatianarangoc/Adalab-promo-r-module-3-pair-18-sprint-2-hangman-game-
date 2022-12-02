@@ -1,6 +1,7 @@
 // Fichero src/components/App.js
-import '../styles/App.scss';
+import React from 'react';
 import { useEffect, useState } from 'react';
+import '../styles/App.scss';
 import getWords from '../../src/services/api';
 import Header from './Hader';
 import Dummy from './Dummy';
@@ -8,8 +9,27 @@ import SolutionLetters from './SolutionLetters';
 import ErrorLetters from './ErrorLetters';
 import Form from './Form';
 import Footer from './Footer';
-import { Routes, Route, Link } from 'react-router-dom';
-// import React from 'react';
+import { Link, Routes, Route } from 'react-router-dom';
+
+const [isPlayActive, setIsPlayActive] = useState(true);
+const [isInstructionActive, setIsInstructionActive] = useState(false);
+const [isOptionsActive, setIsOptionsActive] = useState(false);
+
+const handleClick = (event) => {
+  if (event.target.id === 'play') {
+    setIsPlayActive(true);
+    setIsInstructionActive(false);
+    setIsOptionsActive(false);
+  } else if (event.target.id === 'instructions') {
+    setIsPlayActive(false);
+    setIsInstructionActive(true);
+    setIsOptionsActive(false);
+  } else {
+    setIsPlayActive(false);
+    setIsInstructionActive(false);
+    setIsOptionsActive(true);
+  }
+};
 
 function App() {
   const [numbeOfrErrors, setNumber] = useState(0);
@@ -97,7 +117,18 @@ function App() {
         </section>
       </main>
       <Routes>
-        <Route path="/footer" element={<Footer></Footer>} />
+        <Footer
+          playActive={isPlayActive}
+          instructionActive={isInstructionActive}
+          optionsActive={isOptionsActive}
+          handleClick={handleClick}
+        ></Footer>
+        <Route path="/play:/playId" element={<p>A jugar</p>} />
+        <Route
+          path="/instructions:/instructionsId"
+          element={<p>¿Cómo se juega?</p>}
+        ></Route>
+        <Route path="/options:/optionsId" element={<p>Más opciones</p>}></Route>
       </Routes>
     </div>
   );
