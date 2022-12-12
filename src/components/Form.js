@@ -1,6 +1,12 @@
 const Form = (props) => {
+  const handleSubmit = (ev) => {
+    ev.preventDefault();
+  }; //f
+  const handleClickLetter = (ev) => {
+    props.handleClickLetterr(ev.target.value);
+  };
   return (
-    <form className="form">
+    <form className="form" onSubmit={handleSubmit}>
       <label className="title" htmlFor="last-letter">
         Escribe una letra:
       </label>

@@ -1,6 +1,7 @@
 // Fichero src/components/App.js
 import React from 'react';
 import { useEffect, useState } from 'react';
+import { Route, Routes } from 'react-router-dom';
 import '../styles/App.scss';
 import getWords from '../../src/services/api';
 import Header from './Hader';
@@ -9,33 +10,22 @@ import SolutionLetters from './SolutionLetters';
 import ErrorLetters from './ErrorLetters';
 import Form from './Form';
 import Footer from './Footer';
-import { Link, Routes, Route } from 'react-router-dom';
-
-const [isPlayActive, setIsPlayActive] = useState(true);
-const [isInstructionActive, setIsInstructionActive] = useState(false);
-const [isOptionsActive, setIsOptionsActive] = useState(false);
-
-const handleClick = (event) => {
-  if (event.target.id === 'play') {
-    setIsPlayActive(true);
-    setIsInstructionActive(false);
-    setIsOptionsActive(false);
-  } else if (event.target.id === 'instructions') {
-    setIsPlayActive(false);
-    setIsInstructionActive(true);
-    setIsOptionsActive(false);
-  } else {
-    setIsPlayActive(false);
-    setIsInstructionActive(false);
-    setIsOptionsActive(true);
-  }
-};
-
+import Instructions from './Instructions';
+import Options from './Options';
+import Loading from './Loading';
 function App() {
-  const [numbeOfrErrors, setNumber] = useState(0);
-  const [lastLetter, setlastLetter] = useState('');
-  const [word, setWord] = useState('');
+  //--------------------- VARIABLES ESTADO---------------------
+  // Varible estado para incrementar el número de fallos
+  const [numberOfErrors, setNumberOfErrors] = useState(0);
+  // Variable estado para guardar el carácter introducido en el input
+  const [lastLetter, setLastLetter] = useState('');
+  // Variable estado para almacenar la palabra que se deberá adivinar.
+  const [word, setWord] = useState('katakroker');
+  // Variable estado para para almacenar y pintar las letras que introduce la jugadora.
   const [userLetters, setUserLetters] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // --------------------Llamada a al Api--------------------------
 
   useEffect(() => {
     getWords().then((data) => {
@@ -43,6 +33,7 @@ function App() {
       console.log(data.word);
     });
   }, []);
+  //-----------------------------FUCIONES-------------------------------
   // const handleClick = () => {
   //   setNumber(numbeOfrErrors + 1);
   // };
@@ -50,34 +41,28 @@ function App() {
     const wordLetters = word.split('');
     let re = /^[a-zA-ZñÑá-úÁ-Ú´]$/;
     if (re.test(event.target.value) || event.target.value === '') {
-      setlastLetter(event.target.value);
+      setLastLetter(event.target.value);
       if (event.target.value !== '') {
         setUserLetters([...userLetters, event.target.value]);
-        userLetters.map((eachLetter, index) => {
-          if (wordLetters.includes(eachLetter)) {
-            // x
-          } else {
-            setNumber(numbeOfrErrors + 1);
-            // aqui lo dificil. primer if le digo que si la letra que mete la usuaria
-            // cumple requisitos o si esta vacia, y si los cumple me la quedo
-            //con esa letra que me he quedado valoro si es diferente a nada y si lo cumple la meto en
-            // userlleter. Y ademas de meterla en userleter, le hago un mapeo a userleter
-            // y le pregunto que si la letrita que mete la usuaria
-            // esta por cada letrita de worsleter( palabra traida por fetch)
-            // esta incluida . Si SI esta incluida no hago nada por que ya lo estoy haciendo en otra funcion
-            //y si no esta incluida meto la funcion que teniamos desde el principio para añadir el error. y que lo pinte
-          }
-        });
+        if (!wordLetters.includes(event.target.value)) {
+          setNumberOfErrors(numberOfErrors + 1);
+        }
       }
     }
   };
 
+  const handleChange = (value) => {
+    setLastLetter('');
+    setUserLetters([]);
+    setWord(value);
+  };
+  // -------------------------Función para pintar las letras---------------------------
   const renderSolutionLetters = () => {
     const wordLetters = word.split('');
     return wordLetters.map((eachLetter, index) => {
       if (userLetters.includes(eachLetter)) {
         return (
-          <li key={index} className="letter">
+          <li key={index} Name="letter">
             {eachLetter}
           </li>
         );
@@ -86,10 +71,12 @@ function App() {
       }
     });
   };
+  // ------------Con esta función estamos pintando las letras falladas--------------------
   const renderErrorLetters = () => {
     const wordLetters = word.split('');
     return userLetters.map((eachLetter, index) => {
       if (wordLetters.includes(eachLetter)) {
+        return '';
       } else {
         return (
           <li key={index} className="letter">
@@ -105,31 +92,38 @@ function App() {
         <Header />
       </header>
       <main className="main">
-        <section>
-          <SolutionLetters renderSolutionLetters={renderSolutionLetters} />
-          <ErrorLetters renderErrorLetters={renderErrorLetters} />
-          <Form handleClickLetter={handleClickLetter} lastLetter={lastLetter} />
-          {/* <button onClick={handleClick}>Incrementar</button> */}
-        </section>
+        <Loading isLoading={isLoading} />
+
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <section>
+                <SolutionLetters
+                  renderSolutionLetters={renderSolutionLetters}
+                  word={word}
+                />
+                <ErrorLetters
+                  renderErrorLetters={renderErrorLetters}
+                  word={word}
+                />
+                <Form
+                  handleClickLetter={handleClickLetter}
+                  lastLetter={lastLetter}
+                />
+              </section>
+            }
+          />
+          <Route path="/instructions" element={<Instructions />}></Route>
+          <Route path="/options" element={<Options />} word={word}></Route>
+        </Routes>
 
         <section>
-          <Dummy numbeOfrErrors={numbeOfrErrors} />
+          <Dummy numbeOfrErrors={numberOfErrors} />
         </section>
       </main>
-      <Routes>
-        <Footer
-          playActive={isPlayActive}
-          instructionActive={isInstructionActive}
-          optionsActive={isOptionsActive}
-          handleClick={handleClick}
-        ></Footer>
-        <Route path="/play:/playId" element={<p>A jugar</p>} />
-        <Route
-          path="/instructions:/instructionsId"
-          element={<p>¿Cómo se juega?</p>}
-        ></Route>
-        <Route path="/options:/optionsId" element={<p>Más opciones</p>}></Route>
-      </Routes>
+
+      <Footer />
     </div>
   );
 }
